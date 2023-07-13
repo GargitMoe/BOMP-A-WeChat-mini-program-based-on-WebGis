@@ -1,0 +1,144 @@
+<template>
+  <div class="map">
+    <map
+      :latitude="lat"
+      :longitude="lng"
+      style="width: 100%; height: 100%;"
+      :markers="markers"
+      show-location="true"
+      @markertap="markerTap"
+	  @callouttap="callouttap"
+    ><!-- 自定义气泡 -->
+				<cover-view slot="callout">
+					<cover-view class="customCallout" :marker-id="2">
+						<dw-img class="cus_bg" name="index_bigzheng" :size="[169, 115]"></dw-img>
+						<dw-img class="head_img" name="index_defult_head" :size="42" />
+						<text class="me">我</text>
+					</cover-view>
+				</cover-view></map>
+	<uni-fab ref="fab" horizontal="right" vertical="bottom" :pop-menu="false" @fabClick="fabClick" />
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      lat: 0,
+      lng: 0,
+      markers: [
+        {
+          id: 0,
+          latitude: 22.801188,
+          longitude: 113.954132,
+          iconPath: "",
+          rotate: 0,
+          width: 40,
+          height: 60,
+		  content: '图书馆',
+          alpha: 1,
+		  callout: {
+		  		color: '#000000', // 文本颜色
+		  		bgColor: '#ffffff', // 背景色
+		  		display: "BYCLICK", // 'BYCLICK':点击显示; 'ALWAYS':常显
+		  		fontSize: 10,
+		  		textAlign: 'left', // 文本对齐方式。有效值: left, right, center
+		  		padding: 10, // 文本边缘留白
+		  		borderRadius: 5,
+		  		content: '图书馆',
+		  	},
+        }
+      ]
+    };
+  },
+  mounted() {
+    this.getLocation();
+  },
+  methods: {
+    // 获取当前位置
+    getLocation() {
+      const that = this;
+      uni.getLocation({
+        type: "gcj02",
+        success(res) {
+          that.lat = res.latitude; // 更新经度
+          that.lng = res.longitude; // 更新纬度
+          const qqmap = require('@/pages/qqmap-wx-jssdk.min.js');
+          const showmap = new qqmap({
+            key: 'AC5BZ-UOZ3Q-CVW5V-4MW7Z-ZGE2J-7AB4Q'
+          });
+          showmap.reverseGeocoder({
+            location: {
+              latitude: res.latitude,
+              longitude: res.longitude
+            },
+            success(result) {
+              const adres = result.result.address;
+              that.address = adres;
+              console.log(adres);
+            },
+            fail: (error) => {
+              console.error(error);
+            }
+          });
+        },
+      });
+	
+	},
+    // 发布信息
+   fabClick() {
+      const markerId = this.markers.length;
+      this.markers.push({
+        id: markerId,
+        latitude: this.lat,
+        longitude: this.lng,
+        iconPath: "",
+        width: 40,
+        height: 60,
+        alpha: 1
+      });
+	  uni.navigateTo({
+	  	url: '/pages/tiezi/add',
+	  	success: res => {},
+	  	fail: () => {},
+	  	complete: () => {}
+	  });
+    },
+	callouttap()
+	{
+		uni.navigateTo({
+			url: '/pages/tiezi/add',
+			success: res => {},
+			fail: () => {},
+			complete: () => {}
+		});
+	},
+    // 点击标记
+    markerTap(marker) {
+		uni.navigateTo({
+			url: '../Article/Article',
+			success: res => {},
+			fail: () => {},
+			complete: () => {}
+		});
+      const info = marker.info;
+      if (info && info.image) {
+        uni.showToast({
+          title: "点击标记",
+          icon: "none",
+          duration: 2000
+        });
+        console.log("显示图片信息：" + info.image);
+      }
+    }
+	}
+};
+</script>
+
+<style>
+.map {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+}
+</style>

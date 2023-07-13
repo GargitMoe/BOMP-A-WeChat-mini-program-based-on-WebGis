@@ -1,0 +1,74 @@
+// 文档教程: https://uniapp.dcloud.net.cn/uniCloud/schema
+{
+	"bsonType": "object",
+	"required": [],
+	"permission": {
+		"read": true,
+		"create":"auth.uid != null ",
+		"update": "doc.user_id == auth.uid",
+		"delete": "doc.user_id == auth.uid"
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"user_id":
+		{
+			"foreignKey": "uni-id-users._id",
+			"bsonType": "string",
+			"forceDefaultValue":{
+				"$env": "uid"
+			}
+		},
+		"title":
+		{
+			"bsonType": "string"
+		},
+		"article":
+		{
+			"bsonType": "string"
+		},
+		"image":
+		{
+			"bsonType": "file"
+		},
+		"tag":
+		{
+			"bsonType": "int",
+			"defaultValue": 0,
+			      "description": "帖子标签：0 志愿活动 1 运动 2 随手拍",
+			      "enum": [
+			        {
+			          "text": "志愿活动",
+			          "value": 0
+			        },
+			        {
+			          "text": "运动",
+			          "value": 1
+			        },
+			        {
+			          "text": "随手拍",
+			          "value": 2
+			        }
+			      ]
+		},
+		"mobile":
+		{
+			"bsonType": "string"
+		},
+		"comment_count": {
+			"bsonType": "int",
+			"description": "评论数量",
+			"permission": {
+				"write": false
+			}
+		},
+		"like_count": {
+			"bsonType": "int",
+			"description": "点赞数量",
+			"permission": {
+				"write": false
+			}
+		}
+	}
+}
