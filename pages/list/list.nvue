@@ -1,0 +1,1291 @@
+<!--这个是用来放地图上的气泡点的 -->
+<template>
+
+	<div class="map">
+		<map :latitude="lat" :longitude="lng" enable-3D="true" style="width: 100%; height: 100%;" min-scale="5"
+			:circles="circles" :markers="markers" show-location="true" @markertap="btnMarkerTap" @tap="tapMap"
+			@regionchange="onRegionChanged">
+		</map>
+
+		<uni-fab ref="fab" :pattern="pattern1" :content="content" horizontal="left" vertical="top" direction="vertical"
+			@trigger="trigger" pop-menu="true" />
+		<uni-fab ref="fab" horizontal="left" vertical="bottom" :pop-menu="false" @fabClick="fabClick" />
+		<view :animation="animationData" class="refresh">
+			<uni-fab ref="fab" horizontal="right" vertical="bottom"
+				:pattern="pattern" pop-menu="false" @fabClick="postingfresh()" />
+		</view>
+		<!-- @regionchange="onRegionChanged" -->
+		<!-- <uni-popup ref="popup" type="top" background-color="#fff">顶部弹出 Popup</uni-popup> -->
+		<view class="home-icon" @click="backMyLocation">
+			<uni-icons type="map-pin-ellipse" color="#467897" size="30px"></uni-icons>
+			<!-- <uni-icon name="home" color="#0000ff" size="30px"></u-icon> -->
+		</view>
+
+
+		<uni-popup ref="popup" type="bottom">
+			<view class="popup-content popupBottom">
+				<!-- 弹出层区域 -->
+				<text style="postion:absolute;left:80%;color:darkgrey"@click="toThis">前往详情</text>
+				<uni-icons type="right" class="rightArrow"></uni-icons>
+				<uni-section title="标题" type="line"></uni-section>
+				<view class="text">
+					<text>{{popFlag}}</text>
+				</view>
+				<uni-section title="图片" type="line"></uni-section>
+				<view class="popImg">
+					<image v-if="popImgpath" style="width: 200px; height: 200px;" :src="popImgpath" mode="aspectFill">
+					</image>
+				</view>
+				<view v-if="!addlineFlag" @focus="addLine" @click="tofeedback" class="text1">
+					<text>位置有问题？点击这里反馈</text>
+				</view>
+				<view v-else class="text2" @click="tofeedback">
+					<text>位置有问题？点击这里反馈</text>
+				</view>
+			</view>
+		</uni-popup>
+
+
+		</unicloud-db>
+
+	</div>
+
+</template>
+
+<script>
+	import cloudApi from "../../common/cloudApi.js"
+	import {
+		getDistances
+	} from "../../utils/tools.js"
+	var AudioFlag = 0;
+	var modalFlag = 0; //判断是否弹窗，如果是第一次，不要弹
+	var posting;
+	var popImgpath;
+	var popDescription;
+	var likes;
+	var InterstarraySet = new Array();
+	var popFlag; //判断目前的pop帖子的数据
+	var tiezi;
+	var HaveRead;
+	var tapcount = 0;
+	var staticPostFlag;
+	var Mylat; //用户目前经纬度
+	var Mylng;
+	var latitude_center;
+	var longitude_center;
+	var InterestArray = new Array(); //返回的兴趣列表，是一个数组
+	var Interest0 = 0; //记录用户筛选的帖子
+	var Interest1 = 0;
+	var Interest2 = 0;
+	var Interest3 = 0;
+	var Interest4 = 0;
+	var Interest5 = 0;
+	var FreshCount = 0; //当前点击刷新键的次数
+	var PostingDistanceArray = new Array(); //记录用户目前与各个帖子的距离的数组
+	const db = uniCloud.database();
+	export default {
+		data() {
+			return {
+				isShow: false,
+				show: true,
+				pattern: {
+					color: '#E7CD79',
+					backgroundColor: '#E7CD79',
+					selectedColor: '#467897',
+					buttonColor: '#fffdfe',
+					iconColor: '#467897',
+					icon: 'refreshempty'
+				},
+				pattern1: {
+					color: '#000000',
+					backgroundColor: '#ffffff',
+					selectedColor: '#0000ff',
+					buttonColor: '#fffdfe',
+					iconColor: '#467897',
+					icon: 'bars'
+
+				},
+				content: [{
+						iconPath: '/static/志愿者.png',
+						selectedIconPath: '/static/志愿者.png',
+						text: '志愿',
+						active: false
+					},
+					{
+						iconPath: '/static/篮球.png',
+						selectedIconPath: '/static/篮球.png',
+						text: '运动',
+						active: false
+					},
+					{
+						iconPath: '/static/摄影 .png',
+						selectedIconPath: '/static/摄影 .png',
+						text: '摄影',
+						active: false
+					},
+					{
+						iconPath: '/static/lostandfound.png',
+						selectedIconPath: '/static/lostandfound.png',
+						text: '寻物',
+						active: false
+					},
+
+					{
+						iconPath: '/static/小动物.png',
+						selectedIconPath: '/static/小动物.png',
+						text: '小动物',
+						active: false
+					},
+
+					{
+						iconPath: '/static/演出.jpg',
+						selectedIconPath: '/static/演出.jpg',
+						text: '演出',
+						active: false
+					},
+				],
+				animationData: {},
+				collectionList: "tiezi",
+				lat: "",
+				lng: "",
+				_mapContext:null,
+				markers: [],
+				circles: [],
+				tiezi: [],
+				staticPostFlag: "",
+				popFlag: "",
+				popImgpath: "",
+				popId:'',
+				addlineFlag: "0",
+				longitude_center: "",
+				latitude_center: ""
+			};
+		},
+		mounted() {
+			uni.showTabBarRedDot({
+				 index: 1
+			})
+			console.log("mounted");
+			this.getLocation();
+			this.createMapContext();
+			const db = uniCloud.database();
+			uniCloud.callFunction({
+				name: "posting",
+				data: {}
+			}).then(res => {
+				this.tiezi = res.result.data;
+			});
+
+		},
+		//动画，已弃用
+		/* onShow() {
+			var animation = uni.createAnimation({
+				transformOrigin: "50% 50%",
+				duration: 1000,
+				timingFunction: "linear",
+				delay: 0
+			})
+
+		}, */
+		onLoad(e) {
+			console.log(e);
+			console.log("onload");
+			const db = uniCloud.database();
+			/* this.RecommendAlgorithm(); */
+			uniCloud.callFunction({
+				name: "recommand",
+				data: {}
+			}).then(res => {
+
+				console.log(res);
+			});
+			//防止第一次的刷新延迟，先默认刷新一次
+			uni.$u.sleep(2000).then(() => {
+				this.postingfresh();
+			})
+			//定时删除函数
+			//切换思路，不是删除，而是重新推入新的数组，如果我还需要隔10s把看过的markers移除呢？
+			/* var time = setInterval(() => {
+				this.markers_init();
+			}, 4000) */
+		},
+		//将对应图标指引到帖子的页面
+		methods: {
+			toThis()
+			{
+				console.log(this.popId);
+				uni.navigateTo({
+					url: "../tiezi/detail?id=" +this.popId
+				})
+			},
+			changeLocation(num)
+			{
+				uniCloud.callFunction({
+					name: "posting",
+					data: {}
+				}).then(res => {
+					var tiezi = res.result.data;
+					
+					var markers = [];
+					console.log(res);
+					for (var i = 0; i < tiezi.length; i++) {
+						if (tiezi[i].tag == num) {
+							
+							var NewPostIndex=i;
+						}
+					}
+					/* if(num==1)
+					{
+						url="/static/志愿者.png",
+					} */
+					if(tiezi[NewPostIndex].tag==0){
+						markers.push({
+							id: i,
+							iconPath: '/static/志愿者.png',
+							width: 28,
+							height: 35,
+							latitude: tiezi[NewPostIndex].latitude,
+							longitude: tiezi[NewPostIndex].longtitude,
+						})
+					}
+					else if(tiezi[NewPostIndex].tag==1){
+						markers.push({
+							id: i,
+							iconPath: '/static/篮球.png',
+							width: 28,
+							height: 35,
+							latitude: tiezi[NewPostIndex].latitude,
+							longitude: tiezi[NewPostIndex].longtitude,
+						})
+					}
+					else if(tiezi[NewPostIndex].tag==2){
+						markers.push({
+							id: i,
+							iconPath: '/static/摄影 .png',
+							width: 28,
+							height: 35,
+							latitude: tiezi[NewPostIndex].latitude,
+							longitude: tiezi[NewPostIndex].longtitude,
+						})
+					}
+					else if(tiezi[NewPostIndex].tag==3){
+						markers.push({
+							id: i,
+							iconPath: '/static/lostandfound.png',
+							width: 28,
+							height: 35,
+							latitude: tiezi[NewPostIndex].latitude,
+							longitude: tiezi[NewPostIndex].longtitude,
+						})
+					}
+					else if(tiezi[NewPostIndex].tag==4){
+						markers.push({
+							id: i,
+							iconPath: '/static/小动物.png',
+							width: 28,
+							height: 35,
+							latitude: tiezi[NewPostIndex].latitude,
+							longitude: tiezi[NewPostIndex].longtitude,
+						})
+					}
+					else if(tiezi[NewPostIndex].tag==5){
+						markers.push({
+							id: i,
+							iconPath: '/static/气泡-6.jpg',
+							width: 35,
+							height: 35,
+							latitude: tiezi[NewPostIndex].latitude,
+							longitude: tiezi[NewPostIndex].longtitude,
+						})
+					}
+					this.playSound();
+					this.markers = markers;
+					this.lat=tiezi[NewPostIndex].latitude;
+					this.lng=tiezi[NewPostIndex].longtitude;
+					this.popFlag = tiezi[NewPostIndex].title;
+					this.popImgpath = tiezi[NewPostIndex].image.url;
+					
+					this.popId=tiezi[NewPostIndex]._id;
+					console.log(tiezi[NewPostIndex]);
+					this.popDescription = tiezi[NewPostIndex].article;
+					this.$refs.popup.open('bottom');
+				});
+				
+				
+			},
+			//筛选帖子兴趣的触发函数
+			trigger(e) {
+				console.log(e)
+				this.content[e.index].active = !e.item.active
+				if (this.content[e.index].active) {
+					InterstarraySet.push(e.index);
+					InterstarraySet = InterstarraySet.sort((a, b) => {
+						return a - b
+					});
+				} else {
+					InterstarraySet = InterstarraySet.filter(item => item != e.index)
+				}
+				console.log(InterstarraySet);
+				this.InterestUpdate();
+			},
+			tofeedback() {
+				uni.navigateTo({
+					url: '/uni_modules/uni-feedback/pages/opendb-feedback/opendb-feedback'
+				})
+			},
+			addLine(e) {
+				this.addlineFlag = 1;
+
+			},
+			async InterestUpdate() {
+				let count = await db.collection("MyInterest")
+					.where({
+						user_id: db.getCloudEnv('$cloudEnv_uid'),
+					}).count()
+				if (count.result.total) {
+					await db.collection("MyInterest").where({
+						user_id: db.getCloudEnv('$cloudEnv_uid'),
+					}).update({
+						Interest: InterstarraySet
+					})
+				} else {
+					console.log(InterstarraySet);
+					await db.collection("MyInterest").add({
+						user_id: db.getCloudEnv('$cloudEnv_uid'),
+						Interest: InterstarraySet
+					})
+				}
+
+			},
+			//冗余，本身是要跳到第三个页面来筛选
+			/* async HaveInterest() {
+				let count = await db.collection("MyInterest")
+					.where({
+						user_id: db.getCloudEnv('$cloudEnv_uid'),
+					}).count()
+				if (count.result.total) //如果已经有兴趣，则返回0
+					return false;
+				else
+					return true; //如果还没有设置兴趣，此时返回1，要弹框
+			}, */
+			//把点击聊天室推入的圆形删除
+			tapMap() {
+				if (this.circles.length != 0) {
+					if (++tapcount % 2 == 0)
+						this.circles.pop();
+				}
+			},
+			//获取当前位置与各个帖子位置的函数
+			getPostingDistancesArray(lat, lng) {
+				uniCloud.callFunction({
+					name: "posting",
+					data: {}
+				}).then(res => {
+					for (let i = 0; i < res.result.data.length; i++) {
+						PostingDistanceArray[i] = (getDistances(lat, lng, res.result.data[i].latitude, res
+							.result.data[i].longtitude)) //注意到帖子里的longitude打错了成了longtitude
+					}
+				})
+
+				return PostingDistanceArray;
+			},
+			//点击地图气泡的各种情况的触发
+			btnMarkerTap(e) {
+				console.log(e);
+				var circles = [];
+				let D1, D2, D3;
+				var markerId = e
+					.markerId; //D = arc cos((sin北纬A×sin北纬B)＋(cos北纬A×cos北纬B×cosAB两地经度差))×地球平均半径 (Shormin) 其中地球平均半径为6371.004 km，D的单位为km
+				var tieziInfo = tiezi.data[markerId];
+				D1 = getDistances(Mylat, Mylng, 22.799006, 113.950889); //离图书馆的距离
+				D2 = getDistances(Mylat, Mylng, 22.802233, 113.964089); //离东园宿舍的距离
+				D3 = getDistances(Mylat, Mylng, 22.803446,113.956679) //离东教距离
+				if (e.markerId == 500 && D1.m < 200) //检查目前的位置和聊天室的位置是否小于200米
+				{
+					uni.navigateTo({
+						url: "../Chat/Chat"
+					})
+				} else if (e.markerId == 500 && D1.m > 200) {
+					uni.showToast({
+						title: "不在聊天室附近喔",
+						icon: 'error',
+					})
+					circles.push({
+							id: 1,
+							latitude: 22.799006, //纬度
+							longitude: 113.950889, //经度
+							fillColor: '#9db0de6A ',
+							radius: 200,
+							strokeWidth: 2,
+							color: '#00aaff'
+						}),
+						this.circles = circles;
+				} else if (e.markerId == 501 && D2.m < 200) {
+					uni.navigateTo({
+						url: "../Chat-2/Chat-2"
+					})
+				} else if (e.markerId == 501 && D2.m > 200) {
+					uni.showToast({
+						title: "不在聊天室附近喔",
+						icon: 'error'
+					})
+					circles.push({
+							id: 1,
+							latitude: 22.802233, //纬度
+							longitude: 113.964089, //经度
+							fillColor: '#9db0de6A ',
+							radius: 200,
+							strokeWidth: 2,
+							color: '#00aaff'
+						}),
+						this.circles = circles;
+				} else if (e.markerId == 409 && D3.m < 200) {
+					uni.navigateTo({
+						url: "../Chat-3/Chat-3"
+					})
+				} else if (e.markerId == 409 && D3.m > 200) {
+					uni.showToast({
+						title: "不在聊天室附近喔",
+						icon: 'error'
+					})
+					circles.push({
+							id: 1,
+							latitude: 22.803446, //纬度, 
+							longitude: 113.956679, //经度
+							fillColor: '#9db0de6A ',
+							radius: 200,
+							strokeWidth: 2,
+							color: '#00aaff'
+						}),
+						this.circles = circles;
+				}  
+				else if (e.markerId == 502) {
+					this.staticPostFlag = e.markerId;
+					this.$refs.popup.open('bottom')
+				} else if (tieziInfo.tag == 4) {
+
+					this.popFlag = tieziInfo.title;
+					
+					
+						this.popImgpath = tieziInfo.image.path;
+					
+					
+					this.popDescription = tieziInfo.article;
+					console.log(tieziInfo);
+					this.$refs.popup.open('bottom')
+				} else { //若进入的不是聊天室，则跳转到对应界面
+					uni.navigateTo({
+						url: "../tiezi/detail?id=" + tieziInfo._id
+					})
+				}
+
+				/* 	this.$options.methods.playSound(); */
+
+
+			},
+			//帖子刷新键
+			postingfresh() {
+				//定义动画效果
+				var userNow = uniCloud.getCurrentUserInfo();
+				var markersNew = [];
+				uniCloud.callFunction({
+					name: "HaveRead",
+					data: {}
+				}).then(res => {
+					HaveRead = res.result.data;
+				});
+				uniCloud.callFunction({
+					name: "InterestArray",
+					data: {}
+				}).then(res => {
+					var Interest = res.result.data
+					for (let i = 0; i < Interest.length; i++) {
+						if (Interest[i].user_id == userNow.uid)
+							InterestArray = Interest[i].Interest;
+					}
+
+					for (let i = 0; i < InterestArray.length; i++) {
+						if (InterestArray[i] == 0)
+							Interest0 = 1;
+						if (InterestArray[i] == 1)
+							Interest1 = 1;
+						if (InterestArray[i] == 2)
+							Interest2 = 1;
+						if (InterestArray[i] == 3)
+							Interest3 = 1;
+						if (InterestArray[i] == 4)
+							Interest4 = 1;
+						if (InterestArray[i] == 5)
+							Interest5 = 1;
+					}
+					/* console.log(Interest0);
+					console.log(Interest1);
+					console.log(Interest2);
+					console.log(Interest3);
+					console.log(Interest4);
+					console.log(Interest5); */
+				})
+
+				let DistanceArray = this.$options.methods.getPostingDistancesArray(this.latitude_center, this
+					.longitude_center); //开始获取与各个帖子的位置
+				console.log(DistanceArray);
+				for (let i = 0; i < DistanceArray.length; i++) {
+					if (DistanceArray[i].m <= 400) //即当前的第i个帖子满足条件
+					{
+						uniCloud.callFunction({
+							name: "posting",
+							data: {},
+							success: (res) => {
+								const db = uniCloud.database();
+								tiezi = res.result;
+								var weight;
+								var item = tiezi.data[i];
+								var flag = 0;
+								for (var j = 0; j < HaveRead.length; j++) {
+									if (item._id == HaveRead[j].article_id && HaveRead[j].user_id ==
+										userNow.uid) //this.commentObj.article_id=e.id
+									{
+										flag = 1;
+									} //如果已经是浏览过的文章，降低其图标透明度
+								}
+								if (tiezi.data[i].tag == 0 && Interest0 == 1) {
+									if (item.like_count * 2 + item.view_count *
+										1 >= 30)
+										weight = 30;
+									else
+										weight = item.like_count * 2 + item.view_count * 1;
+									//判断文章tag来选择显示对应的图片
+									markersNew.push({ //能不能使用pop来清除？
+										id: i,
+										alpha: 1 - 0.5 * flag, //透明度
+										width: 22 + weight, //图标的大小会随着点赞和阅读量逐渐提高
+										height: 28 + weight,
+										iconPath: "/static/志愿者.png",
+										latitude: item.latitude,
+										longitude: item.longtitude,
+										joinCluster: true,
+									});
+								}
+								if (tiezi.data[i].tag == 1 && Interest1 == 1) {
+									if (item.like_count * 2 + item.view_count *
+										1 >= 30)
+										weight = 30;
+									else
+										weight = item.like_count * 2 + item.view_count * 1;
+									markersNew.push({
+										id: i,
+										alpha: 1 - 0.5 * flag, //透明度
+										width: 22 + weight,
+										height: 28 + weight,
+										iconPath: "/static/篮球.png",
+										latitude: item.latitude,
+										longitude: item.longtitude,
+										joinCluster: true,
+									});
+
+								}
+								if (tiezi.data[i].tag == 2 && Interest2 == 1) {
+									if (item.like_count * 2 + item.view_count *
+										1 >= 30)
+										weight = 30;
+									else
+										weight = item.like_count * 2 + item.view_count * 1;
+									markersNew.push({
+										id: i,
+										alpha: 1 - 0.5 *
+											flag, //透明度，可以通过减一个参数实现透明度的减少
+										width: 22 + weight,
+										height: 28 + weight,
+										iconPath: "/static/摄影 .png",
+										latitude: item.latitude,
+										longitude: item.longtitude,
+										joinCluster: true,
+									});
+
+								}
+								if (tiezi.data[i].tag == 3 && Interest3 == 1) {
+									if (item.like_count * 2 + item.view_count *
+										1 >= 30)
+										weight = 30;
+									else
+										weight = item.like_count * 2 + item.view_count * 1;
+									markersNew.push({
+										id: i,
+										alpha: 1 - 0.5 *
+											flag, //透明度，可以通过减一个参数实现透明度的减少
+										width: 22 + weight,
+										height: 28 + weight,
+										iconPath: "/static/lostandfound.png",
+										latitude: item.latitude,
+										longitude: item.longtitude,
+										joinCluster: true,
+									});
+
+								}
+								if (tiezi.data[i].tag == 4 && Interest4 == 1) {
+									if (item.like_count * 2 + item.view_count *
+										1 >= 30)
+										weight = 30;
+									else
+										weight = item.like_count * 2 + item.view_count * 1;
+									markersNew.push({
+										id: i,
+										alpha: 1 - 0.5 *
+											flag, //透明度，可以通过减一个参数实现透明度的减少
+										width: 52,
+										height: 58,
+										iconPath: "/static/小动物.png",
+										latitude: item.latitude,
+										longitude: item.longtitude,
+										joinCluster: true,
+									});
+
+								}
+								if (tiezi.data[i].tag == 5 && Interest5 == 1) {
+									if (item.like_count * 2 + item.view_count *
+										1 >= 30)
+										weight = 30;
+									else
+										weight = item.like_count * 2 + item.view_count * 1;
+									markersNew.push({
+										id: i,
+										alpha: 1 - 0.5 *
+											flag, //透明度，可以通过减一个参数实现透明度的减少，例如看过的图标可以变得更灰更透明，这点需要获取浏览记录
+										width: 28 + weight,
+										height: 28 + weight,
+										iconPath: "/static/气泡-6.png",
+										latitude: item.latitude,
+										longitude: item.longtitude,
+										joinCluster: true,
+									});
+
+								}
+								/* markersNew.push({
+									id: 502,
+									width: 44,
+									height: 48,
+									iconPath: "/static/小动物.png",
+									latitude: 22.802571,
+									longitude: 113.964874,
+								}); */
+							}
+						})
+					}
+					}
+					markersNew.push({
+						id: 500,
+						width: 44,
+						height: 48,
+						iconPath: "/static/聊天室.png",
+						latitude: 22.799006,
+						longitude: 113.950889,
+					});
+					markersNew.push({
+						id: 501,
+						width: 44,
+						height: 48,
+						iconPath: "/static/聊天室.png",
+						latitude: 22.802233,
+						longitude: 113.964089,
+					});
+					markersNew.push({
+						id: 409,
+						width: 44,
+						height: 48,
+						iconPath: "/static/聊天室.png",
+						latitude: 22.803446,
+						longitude: 113.956679,
+					});
+					this.markers = markersNew;
+				
+				Interest0 = 0;
+				Interest1 = 0;
+				Interest2 = 0;
+				Interest3 = 0;
+				Interest4 = 0;
+				Interest5 = 0;
+				if (AudioFlag) {
+					this.playSound();
+					//动画，已弃用
+					/* var animation = uni.createAnimation({
+						transformOrigin: "50% 50%",
+						duration: 500,
+						timingFunction: 'linear',
+					})
+					this.animation = animation;
+					animation.rotate(45).step();
+
+					this.animationData = animation.export(); */
+				}
+				AudioFlag = 1;
+			},
+			//音效播放函数
+			playSound() { 
+				//创建音频实例
+				const innerAudioContext = uni.createInnerAudioContext();
+				innerAudioContext.autoplay = true;
+				innerAudioContext.src = '/static/11893.mp3';
+				innerAudioContext.onPlay(() => {
+					console.log('开始播放');
+				});
+				innerAudioContext.onError((res) => {
+					console.log(res.errMsg);
+					console.log(res.errCode);
+				});
+
+			},
+			// 获取当前位置
+			getLocation() {
+				const that = this;
+				uni.getLocation({
+					type: "gcj02",
+					success(res) {
+						that.lat = res.latitude; // 更新经度
+						that.lng = res.longitude; // 更新纬度
+						Mylat = res.latitude;
+						Mylng = res.longitude;
+						const qqmap = require('@/pages/qqmap-wx-jssdk.min.js');
+						const showmap = new qqmap({
+							key: 'KDHBZ-4Q66N-OKZFD-SZKEG-LAXU5-YTB32'
+						});
+						showmap.reverseGeocoder({
+							location: {
+								latitude: res.latitude,
+								longitude: res.longitude
+							},
+							success(result) {
+								const adres = result.result.address;
+								that.address = adres;
+								console.log(adres);
+
+							},
+							fail: (error) => {
+								console.error(error);
+							}
+						});
+					},
+				});
+
+			},
+			//点聚合相关内容
+			createMapContext() {
+				// 创建地图对象
+				this._mapContext = uni.createMapContext("map", this);
+				// 仅调用初始化，才会触发 on.("markerClusterCreate", (e) => {})
+				this._mapContext.initMarkerCluster({ // 初始化点聚合的配置
+					enableDefaultStyle: true, // 是否使用默认样式
+					zoomOnClick: true,
+					gridSize: 60,
+					complete(res) {
+						console.log('initMarkerCluster', res)
+					}
+				});
+
+				// 新的聚合簇产生时触发
+				this._mapContext.on("markerClusterCreate", (e) => {
+					let clusterMarkers = []
+					const clusters = e.clusters // 新产生的聚合簇
+					clusters.forEach((cluster, index) => {
+						const {
+							center, // 聚合点的经纬度数组
+							clusterId, // 聚合簇id
+							markerIds // 已经聚合了的标记点id数组
+						} = cluster
+						let clusterObj = {
+							clusterId, //必须
+							...center,
+							width: 0,
+							height: 0,
+							iconPath: '',
+							label: { // 定制聚合簇样式
+								content: markerIds.length + '',
+								fontSize: 16,
+								color: '#fff',
+								width: 50,
+								height: 50,
+								bgColor: '#467897',
+								borderRadius: 25,
+								textAlign: 'center',
+								anchorX: -10,
+								anchorY: -35,
+
+							}
+						}
+						clusterMarkers.push(clusterObj)
+					})
+					// 添加聚合簇
+					this._mapContext.addMarkers({
+						markers: clusterMarkers,
+						clear: false, //是否先清空地图上所有的marker
+					})
+				});
+
+			},
+			// 调接口获取所有点标记经纬度
+			// 添加点标记
+			addMarkers() {
+				let markers = []
+				let iconPath = ''
+				this.markersOptions.forEach((item, index) => {
+					//根据点位类型不同，定义不同的标记icon
+					let markerObj = {
+						width: 45,
+						height: 45,
+						id: item.id,
+						iconPath,
+						latitude: Number(item.latitude),
+						longitude: Number(item.longtitude),
+						joinCluster: true, // 产生聚合簇，需添加该属性
+						zIndex: 99999,
+						anchor: {
+							x: .5,
+							y: 1
+						}
+					}
+					const newMarker = Object.assign({}, markerObj)
+					markers.push(newMarker)
+
+				})
+				this._mapContext.addMarkers({
+					markers,
+					clear: false, // 是否先清空地图上所有marker
+				})
+			},
+			// 发布信息
+			fabClick() {
+				uni.navigateTo({
+					url: '/pages/tiezi/add',
+					success: res => {},
+					fail: () => {},
+					complete: () => {}
+				});
+			},
+			
+			/* fabClick2() {
+
+			}, */
+			backMyLocation() {
+				/* console.log(Mylat);
+				console.log(Mylng);
+				this.lat=22;
+				this.lng=113; */
+				
+				/* this.getLocation();
+				console.log(Mylat);
+				console.log(Mylng);
+				this.lat=Mylat;
+				this.lng=Mylng; */
+			},
+			/* chat_init() {
+
+			}, */
+			//定时触发的重新推入帖子
+			markers_init() {
+				uniCloud.callFunction({
+					name: "HaveRead",
+					data: {}
+				}).then(res => {
+					HaveRead = res.result.data;
+				});
+				var userNow = uniCloud.getCurrentUserInfo() //获取当前用户信息
+				uniCloud.callFunction({
+					name: "InterestArray",
+					data: {},
+
+				}).then(res => {
+					var Interest = res.result.data
+
+					for (let i = 0; i < Interest.length; i++) {
+						if (Interest[i].user_id == userNow.uid)
+							InterestArray = Interest[i].Interest;
+					}
+					for (let i = 0; i < InterestArray.length; i++) {
+						if (InterestArray.indexOf(0) == -1)
+							Interest0 = 0;
+						if (InterestArray.indexOf(1) == -1)
+							Interest1 = 0;
+						if (InterestArray.indexOf(2) == -1)
+							Interest2 = 0;
+						if (InterestArray.indexOf(3) == -1)
+							Interest3 = 0;
+						if (InterestArray.indexOf(4) == -1)
+							Interest4 = 0;
+						if (InterestArray.indexOf(5) == -1)
+							Interest5 = 0;
+						if (InterestArray[i] == 0)
+							Interest0 = 1;
+						if (InterestArray[i] == 1)
+							Interest1 = 1;
+						if (InterestArray[i] == 2)
+							Interest2 = 1;
+						if (InterestArray[i] == 3)
+							Interest3 = 1;
+						if (InterestArray[i] == 4)
+							Interest4 = 1;
+						if (InterestArray[i] == 5)
+							Interest5 = 1;
+					}
+
+				})
+				if (userNow && !Interest0 && !Interest1 && !Interest2 && !Interest3 && !Interest4 && !Interest5 &&
+					modalFlag == 1) {
+					//页面导引
+					uni.showModal({
+						title: '提示',
+						content: '你还没有设置自己的帖子兴趣，是否前往设置？',
+						success: function(res) {
+							if (res.confirm) {
+								console.log('用户点击确定');
+								uni.switchTab({
+									url: '/pages/ucenter/ucenter'
+								})
+							} else if (res.cancel) {
+								console.log('用户点击取消');
+							}
+						}
+					});
+				}
+				modalFlag++;
+				uniCloud.callFunction({
+					name: "likes",
+					data: {},
+					success: (res) => {
+						likes = res.result;
+
+					}
+				})
+				uniCloud.callFunction({
+					name: "posting",
+					data: {},
+					success: (res) => {
+						const db = uniCloud.database();
+						tiezi = res.result;
+
+						var weight;
+						var markers = [];
+						for (var i = 0; i < tiezi.data.length; i++) {
+							var item = tiezi.data[i];
+							var flag = 0;
+							for (var j = 0; j < HaveRead.length; j++) {
+								if (item._id == HaveRead[j].article_id && HaveRead[j].user_id == userNow
+									.uid) //this.commentObj.article_id=e.id
+								{
+									flag = 1;
+								} //如果已经是浏览过的文章，降低其图标透明度
+							}
+							if (tiezi.data[i].tag == 0 && Interest0 == 1) {
+								if (item.like_count * 2 + item.view_count *
+									1 >= 30)
+									weight = 30;
+								else
+									weight = item.like_count * 2 + item.view_count * 1;
+								//判断文章tag来选择显示对应的图片
+								markers.push({ //能不能使用pop来清除？
+									id: i,
+									alpha: 1 - 0.5 * flag, //透明度
+									width: 22 + weight, //图标的大小会随着点赞和阅读量逐渐提高
+									height: 28 + weight,
+									iconPath: "/static/志愿者.png",
+									latitude: item.latitude,
+									longitude: item.longtitude,
+									joinCluster: true,
+								});
+							}
+							if (tiezi.data[i].tag == 1 && Interest1 == 1) {
+								if (item.like_count * 2 + item.view_count *
+									1 >= 30)
+									weight = 30;
+								else
+									weight = item.like_count * 2 + item.view_count * 1;
+								markers.push({
+									id: i,
+									alpha: 1 - 0.5 * flag, //透明度
+									width: 22 + weight,
+									height: 28 + weight,
+									iconPath: "/static/篮球.png",
+									latitude: item.latitude,
+									longitude: item.longtitude,
+									joinCluster: true,
+								});
+
+							}
+							if (tiezi.data[i].tag == 2 && Interest2 == 1) {
+								if (item.like_count * 2 + item.view_count *
+									1 >= 30)
+									weight = 30;
+								else
+									weight = item.like_count * 2 + item.view_count * 1;
+								markers.push({
+									id: i,
+									alpha: 1 - 0.5 *
+										flag, //透明度，可以通过减一个参数实现透明度的减少，例如看过的图标可以变得更灰更透明，这点需要获取浏览记录
+									width: 22 + weight,
+									height: 28 + weight,
+									iconPath: "/static/摄影 .png",
+									latitude: item.latitude,
+									longitude: item.longtitude,
+									joinCluster: true,
+								});
+
+							}
+							if (tiezi.data[i].tag == 3 && Interest3 == 1) {
+								if (item.like_count * 2 + item.view_count *
+									1 >= 30)
+									weight = 30;
+								else
+									weight = item.like_count * 2 + item.view_count * 1;
+								markers.push({
+									id: i,
+									alpha: 1 - 0.5 *
+										flag, //透明度，可以通过减一个参数实现透明度的减少，例如看过的图标可以变得更灰更透明，这点需要获取浏览记录
+									width: 22 + weight,
+									height: 28 + weight,
+									iconPath: "/static/lostandfound.png",
+									latitude: item.latitude,
+									longitude: item.longtitude,
+									joinCluster: true,
+								});
+
+							}
+							if (tiezi.data[i].tag == 4 && Interest4 == 1) {
+								if (item.like_count * 2 + item.view_count *
+									1 >= 30)
+									weight = 30;
+								else
+									weight = item.like_count * 2 + item.view_count * 1;
+								markers.push({
+									id: i,
+									alpha: 1 - 0.5 *
+										flag, //透明度，可以通过减一个参数实现透明度的减少，例如看过的图标可以变得更灰更透明，这点需要获取浏览记录
+									width: 52,
+									height: 58,
+									iconPath: "/static/小动物.png",
+									latitude: item.latitude,
+									longitude: item.longtitude,
+									joinCluster: true,
+								});
+
+							}
+							if (tiezi.data[i].tag == 5 && Interest5 == 1) {
+								if (item.like_count * 2 + item.view_count *
+									1 >= 30)
+									weight = 30;
+								else
+									weight = item.like_count * 2 + item.view_count * 1;
+								markers.push({
+									id: i,
+									alpha: 1 - 0.5 *
+										flag, //透明度，可以通过减一个参数实现透明度的减少，例如看过的图标可以变得更灰更透明，这点需要获取浏览记录
+									width: 22 + weight,
+									height: 28 + weight,
+									iconPath: "/static/气泡-6.png",
+									latitude: item.latitude,
+									longitude: item.longtitude,
+									joinCluster: true,
+								});
+
+							}
+						}
+						//创建相似度矩阵
+
+						/* console.log(P); */ //推送权重矩阵，大小依旧为帖子数*用户数量
+						/* markers.push({
+							id: 409,
+							width: 44,
+							height: 48,
+							iconPath: "/static/聊天室.png",
+							latitude: 22.55329,
+							longitude: 113.88308, 
+						}); */
+						markers.push({
+							id: 500,
+							width: 44,
+							height: 48,
+							iconPath: "/static/聊天室.png",
+							latitude: 22.799006,
+							longitude: 113.950889,
+						});
+						markers.push({
+							id: 501,
+							width: 44,
+							height: 48,
+							iconPath: "/static/聊天室.png",
+							latitude: 22.802233,
+							longitude: 113.964089,
+						});
+						markers.push({
+							id: 502,
+							width: 44,
+							height: 48,
+							iconPath: "/static/小动物.png",
+							latitude: 22.802571,
+							longitude: 113.964874,
+						});
+
+
+
+						/* var time = setInterval(()=>{
+							console.log(markers);
+						,2000) */
+						//把当前页面的markers赋值为上面创建的markers列表，实际上不用删除也可以
+						this.markers = markers;
+						/* console.clear(); */
+					},
+					fail: (error) => {
+						console.error(error);
+					}
+
+				})
+			},
+			// 检测目前用户拖动触发的帖子推入（打算被定时器替代）
+			//根据目前拖动屏幕的中心推入相应的帖子
+			onRegionChanged(e) {
+
+				if (e.type == "end") {
+					var latitude = e.detail.centerLocation.latitude;
+					var longitude = e.detail.centerLocation.longitude;
+					console.log("current centerlatitude", latitude);
+					console.log("longitude", longitude);
+					this.latitude_center = e.detail.centerLocation.latitude;
+					this.longitude_center = e.detail.centerLocation.longitude;
+					console.log(this.latitude_center);
+					console.log(this.longitude_center);
+
+				}
+
+			}
+		}
+	};
+</script>
+
+<style>
+	.rightArrow{
+		position: absolute;
+		right: 1%;
+	}
+	/* .refresh{
+		display: block;
+		transform: rotate(10deg);
+	} */
+	/* .refresh {
+
+		animation: animal 2s infinite linear;
+		-webkit-animation: animal 2s infinite linear;
+		-webkit-transform-origin: center center;
+		-ms-transform-origin: center center;
+		transform-origin: center center;
+}
+
+		@keyframes animal {
+			0% {
+				transform: rotate(0deg);
+				-ms-transform: rotate(0deg);
+				-webkit-transform: rotate(0deg);
+			}
+
+			100% {
+				transform: rotate(360deg);
+				-ms-transform: rotate(360deg);
+				-webkit-transform: rotate(360deg);
+			}
+		} */
+
+
+
+	.text {
+		position: absolute;
+		left: 35%;
+		font-weight: 600;
+		top: 5%;
+	}
+
+	.text1 {
+		position: absolute;
+		left: 7%;
+		font-size: 10px;
+		color: #2E5BFF;
+		top: 85%;
+
+	}
+
+	.text2 {
+		position: absolute;
+		left: 7%;
+
+		font-size: 10px;
+		color: #2E5BFF;
+		top: 85%;
+		text-decoration: underline;
+	}
+
+	.popImg {
+		position: absolute;
+		top: 20%;
+		left: 26%;
+	}
+
+	.map {
+		height: 100%;
+		width: 100%;
+		position: absolute;
+	}
+
+	.home-icon {
+		border-radius: 10px;
+		position: absolute;
+		bottom: 100px;
+		left: 84%;
+		color: black;
+		background-color: #fff;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 50px;
+		height: 35px;
+	}
+
+	.popupBottom {
+		height: 650rpx;
+		overflow: hidden;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		padding: 10rpx 20rpx;
+		border-radius: 20rpx 20rpx 0 0;
+		background-color: #fff;
+	}
+
+	.popupBtn {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		height: 10%;
+	}
+
+	.popupBtnL {
+		color: #666666;
+	}
+
+	.popupBtnTtitle {
+		font-size: 30rpx;
+		font-weight: 500;
+		color: #202020;
+	}
+
+	.popupBtnR {
+		color: #2E5BFF;
+	}
+
+	.popupConAll {
+		display: flex;
+		flex-direction: column;
+		margin: 10rpx 0;
+	}
+
+	.popupConItem {
+		display: flex;
+		align-items: center;
+		margin: 10rpx 0;
+	}
+</style>
