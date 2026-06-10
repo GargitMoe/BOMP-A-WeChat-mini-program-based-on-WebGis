@@ -2,13 +2,16 @@
 	"bsonType": "object",
 	"permission": {
 		"read": true,
-		"create": "'CREATE_UNI_ID_USERS' in auth.permission",
-		"update": "doc._id == auth.uid || 'UPDATE_UNI_ID_USERS' in auth.permission",
-		"delete": "'DELETE_UNI_ID_USERS' in auth.permission"
+		"create": true,
+		"update": true,
+		"delete": true
 	},
 	"properties": {
 		"_id": {
-			"description": "存储文档 ID（用户 ID），系统自动生成"
+			"description": "存储文档 ID（用户 ID），系统自动生成",
+			"permission": {
+				"read": true
+			}
 		},
 		"ali_openid": {
 			"bsonType": "string",
@@ -84,6 +87,13 @@
 			"description": "学院",
 			"title": "学院"
 		},
+		
+		"Interest":
+		{
+			"bsonType": "string",
+			"description": "兴趣",
+			"title": "兴趣"
+		},
 		"lat": {
 			"bsonType": "double",
 			"description": "经度",
@@ -93,7 +103,7 @@
 			"bsonType": "double",
 			"description": "纬度",
 			"title": "纬度"
-			},
+		},
 		"email": {
 			"bsonType": "string",
 			"description": "邮箱地址",
@@ -105,20 +115,17 @@
 				"write": "'CREATE_UNI_ID_USERS' in auth.permission || 'UPDATE_UNI_ID_USERS' in auth.permission"
 			}
 		},
-
 		"email_confirmed": {
 			"bsonType": "int",
 			"defaultValue": 0,
 			"description": "邮箱验证状态：0 未验证 1 已验证",
 			"enum": [{
-					"text": "未验证",
-					"value": 0
-				},
-				{
-					"text": "已验证",
-					"value": 1
-				}
-			],
+				"text": "未验证",
+				"value": 0
+			}, {
+				"text": "已验证",
+				"value": 1
+			}],
 			"title": "邮箱验证状态",
 			"permission": {
 				"read": "doc._id == auth.uid || 'READ_UNI_ID_USERS' in auth.permission",
@@ -130,18 +137,15 @@
 			"defaultValue": 0,
 			"description": "用户性别：0 未知 1 男性 2 女性",
 			"enum": [{
-					"text": "未知",
-					"value": 0
-				},
-				{
-					"text": "男",
-					"value": 1
-				},
-				{
-					"text": "女",
-					"value": 2
-				}
-			],
+				"text": "未知",
+				"value": 0
+			}, {
+				"text": "男",
+				"value": 1
+			}, {
+				"text": "女",
+				"value": 2
+			}],
 			"title": "性别",
 			"permission": {
 				"read": "doc._id == auth.uid || 'READ_UNI_ID_USERS' in auth.permission",
@@ -197,14 +201,12 @@
 			"defaultValue": 0,
 			"description": "手机号验证状态：0 未验证 1 已验证",
 			"enum": [{
-					"text": "未验证",
-					"value": 0
-				},
-				{
-					"text": "已验证",
-					"value": 1
-				}
-			],
+				"text": "未验证",
+				"value": 0
+			}, {
+				"text": "已验证",
+				"value": 1
+			}],
 			"title": "手机号验证状态",
 			"permission": {
 				"read": "doc._id == auth.uid || 'READ_UNI_ID_USERS' in auth.permission",
@@ -230,7 +232,7 @@
 			}
 		},
 		"password": {
-			"bsonType": "password",
+			"bsonType": "string",//原本应该是password类型
 			"description": "密码，加密存储",
 			"title": "密码",
 			"trim": "both"
@@ -284,7 +286,7 @@
 				},
 				"identity": {
 					"bsonType": "string",
-					"description": "身份证号码/营业执照号码"
+					"description": "身份证号码\/营业执照号码"
 				},
 				"in_hand": {
 					"bsonType": "string",
@@ -296,7 +298,7 @@
 				},
 				"real_name": {
 					"bsonType": "string",
-					"description": "真实姓名/企业名称"
+					"description": "真实姓名\/企业名称"
 				},
 				"type": {
 					"bsonType": "int",
@@ -305,10 +307,7 @@
 					"minimum": 0
 				}
 			},
-			"required": [
-				"type",
-				"auth_status"
-			]
+			"required": ["type", "auth_status"]
 		},
 		"register_date": {
 			"bsonType": "timestamp",
@@ -372,22 +371,18 @@
 				"write": "'CREATE_UNI_ID_USERS' in auth.permission || 'UPDATE_UNI_ID_USERS' in auth.permission"
 			},
 			"enum": [{
-					"text": "正常",
-					"value": 0
-				},
-				{
-					"text": "禁用",
-					"value": 1
-				},
-				{
-					"text": "审核中",
-					"value": 2
-				},
-				{
-					"text": "审核拒绝",
-					"value": 3
-				}
-			],
+				"text": "正常",
+				"value": 0
+			}, {
+				"text": "禁用",
+				"value": 1
+			}, {
+				"text": "审核中",
+				"value": 2
+			}, {
+				"text": "审核拒绝",
+				"value": 3
+			}],
 			"title": "用户状态"
 		},
 		"token": {
@@ -404,7 +399,7 @@
 			"title": "用户名",
 			"trim": "both",
 			"permission": {
-				"read": "doc._id == auth.uid || 'READ_UNI_ID_USERS' in auth.permission",
+				"read": true,
 				"write": "'CREATE_UNI_ID_USERS' in auth.permission || 'UPDATE_UNI_ID_USERS' in auth.permission"
 			}
 		},
@@ -483,7 +478,18 @@
 				"read": "'READ_UNI_ID_USERS' in auth.permission",
 				"write": "'CREATE_UNI_ID_USERS' in auth.permission || 'UPDATE_UNI_ID_USERS' in auth.permission"
 			}
+		},
+		"Interest_Array":
+		{
+			"bsonType": "array",
+			"defaultValue": 0,
+			"permission": {
+				"read": true,
+				"write": true,
+				"update":true
+			}
 		}
 	},
+	
 	"required": []
 }

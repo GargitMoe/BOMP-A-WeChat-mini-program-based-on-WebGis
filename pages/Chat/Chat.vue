@@ -1,5 +1,6 @@
+<!--聊天界面 -->
 <template>
-	<unicloud-db where="state==true" v-slot:default="{data, loading, error, options}"
+	<unicloud-db ref="udb" where="state==true" v-slot:default="{data, loading, error, options}"
 		collection="guestbook,uni-id-users" field="_id,text,state,user_id._id,user_id.nickname,user_id.avatar_file">
 		<view class="chat">
 			<scroll-view :style="{height: `${windowHeight-inputHeight}rpx`}" id="scrollview" scroll-y="true"
@@ -9,16 +10,31 @@
 					<!-- 聊天记录 -->
 					<view v-for="(item,index) in data" :key="index">
 						<!-- 自己发的消息 -->
+						<!-- 以下信息是在右方的 -->
+						<!-- 本质上是头像和content内容的互换 -->
 						<view class="item self" v-if="item.userContent != ''">
 							<!-- 文字内容 -->
-							<view class="content right">
+							<view class="content right" v-if="item.user_id[0]._id==userNow">
+								{{item.text}}
+								
+							</view>
+							<view class="avatar" v-if="item.user_id[0]._id==userNow">
+								<cloud-image mode="aspectFit" v-if="item.user_id[0].avatar_file.url" @click="toMyInfo(item.user_id)":src="item.user_id[0].avatar_file.url"></cloud-image>
+								<image style="width:40px;height:40px;"mode="aspectFill" v-else @click="clickAvatar"src="@/static/user.png"></image>
+							</view>
+
+						</view>
+						<!-- 左方信息 -->
+						<view class="item Ai" v-if="item.botContent != ''">
+							<!-- 头像 -->     
+							<view class="avatar" v-if="item.user_id[0]._id!=userNow">
+								<cloud-image mode="aspectFit" v-if="item.user_id[0].avatar_file.url" @click="clickAvatar":src="item.user_id[0].avatar_file.url"></cloud-image>
+								<image style="width:40px;height:40px;"mode="aspectFill" v-else @click="clickAvatar"src="@/static/user.png"></image>
+							</view>
+							<!-- 文字内容 -->
+							<view class="content left" v-if="item.user_id[0]._id!=userNow">
 								{{item.text}}
 							</view>
-							<!-- 头像 -->
-							<!--view class="avatar">
-								<cloud-image :src="item.user_id[0].avatar_file.url"></cloud-image>
-							</view>
-							<!头像 -->
 						</view>
 					</view>
 				</view>
@@ -39,10 +55,12 @@
 	</unicloud-db>
 </template>
 <script>
+	import {giveName,giveAvatar} from "../../utils/tools.js"
 	export default {
 		data() {
 			return {
 				//键盘高度
+				userNow:'',
 				keyboardHeight: 0,
 				//底部消息发送高度
 				bottomHeight: 0,
@@ -51,8 +69,8 @@
 				userId: '',
 				//发送的消息
 				text: "",
-				msgList:[
-					{
+				msgList: [
+					/* {
 					    botContent: "hello，请问我有什么可以帮助你的吗？",
 					    recordId: 0,
 					    titleId: 0,
@@ -65,8 +83,8 @@
 					    titleId: 0,
 					    userContent: "你好呀我想问你一件事",
 					    userId: 0
-					},
-				]	
+					}, */
+				]
 			}
 		},
 		updated() {
@@ -83,6 +101,7 @@
 			}
 		},
 		onLoad() {
+			this.userNow=uniCloud.getCurrentUserInfo().uid;
 			this.scrollToBottom();
 			uni.onKeyboardHeightChange(res => {
 				//这里正常来讲代码直接写
@@ -96,6 +115,25 @@
 			uni.offKeyboardHeightChange()
 		},
 		methods: {
+			toMyInfo(id)
+			{
+				uni.navigateTo({
+					url:'/pages/MyInfo/MyInfo'
+				})
+			},
+			async getGuestbook()
+			{
+				let guestTemp = db.collection("guestbook")
+					.limit(20).getTemp();
+				let userTemp = db.collection("uni-id-users").field("_id,username,nickname,avatar_file").getTemp();
+				let res = await db.collection(commentTemp, userTemp).get();
+				console.log(res);
+				
+			},
+			clickAvatar()
+			{
+				
+			},
 			focus() {
 				this.scrollToBottom()
 			},
@@ -134,13 +172,29 @@
 			send() {
 				const db = uniCloud.database();
 				const guestbookTable = db.collection('guestbook')
-				let res =guestbookTable.add({
+				let res = guestbookTable.add({
 					"text": this.text,
 					//"state":false,
 					//"user_id":"123456"
 				})
 				this.text = '';
-				this.scrollToBottom()
+				this.$forceUpdate();
+				let commentTemp=db.collection("guestbook").getTemp();
+				console.log(commentTemp);
+				this.scrollToBottom();
+				this.$refs.udb.loadData();
+				uni.showToast({
+					title:"发送成功"
+				})
+			},
+			chatEnv()
+			{
+				uniCloud.callFunction({
+					name: "Chat",
+					data: {}
+				}).then(res => {
+					console.log(res.result);
+				})
 			},
 			// 发送消息
 			handleSend() {
@@ -176,7 +230,10 @@
 		padding: 0;
 		box-sizing: border-box;
 	}
-
+	.avatar{
+		width:50rpx;
+		height:60rpx;
+	}
 	/* 聊天消息 */
 	.chat {
 		.scroll-view {
@@ -208,11 +265,11 @@
 					// background-color: greenyellow;
 
 					.right {
-						background-color: $chatContentbgc;
+						background-color: #74ff03;
 					}
 
 					.left {
-						background-color: #ff0741;
+						background-color: #FFFFFF;
 					}
 
 					// 聊天消息的三角形
@@ -222,10 +279,10 @@
 						content: '';
 						width: 0;
 						height: 0;
-						left: 100%;
+						left: 100%;              //这个是决定了气泡在左方还是在右方的！
 						top: 10px;
 						border: 12rpx solid transparent;
-						border-left: 12rpx solid $chatContentbgc;
+						border-left: 12rpx solid #74ff03;
 					}
 
 					.left::after {
@@ -260,12 +317,18 @@
 						justify-content: center;
 						width: 78rpx;
 						height: 78rpx;
-						background: $sendBtnbgc;
+						background: #FFFFFF;
 						border-radius: 8rpx;
 						overflow: hidden;
 
 						image {
 							align-self: center;
+						}
+						.cloudimg
+						{
+							mode:aspectFill;
+							width:40px;
+							height:40px;
 						}
 
 					}

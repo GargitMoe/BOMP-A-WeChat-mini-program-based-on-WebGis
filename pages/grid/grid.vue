@@ -1,9 +1,27 @@
 <template>
 	<view class="center">
+		<view class="box">
+			
+			<view class="minibox1">
+			<uni-icons class="star" type="heart-filled" size="55" color="#fa5f5a" @click="tocomment"></uni-icons>
+			<text style="position: relative; top:10%;left:16%;color:black;font-weight: 400;">收藏</text>
+			</view>
+			<view class="minibox2">
+			<uni-icons class="chat" type="chat-filled" size="55" color="#35d99a" @click="totiezi"></uni-icons>	
+			<text style="position: relative; top:10%;left:18%;color:black;font-weight: 400;">帖子</text>
+			</view>
+			<view class="minibox3">
+			<uni-icons class="chatbox" type="chatboxes-filled" size="55" color="#3586fc" @click="tochat"></uni-icons>	
+			<text style="position: relative; top:10%;left:3%;color:black;font-weight: 400;">聊天室</text>
+			</view>
+		</view>
+		
+		
 		<uni-list class="center-list" v-for="(sublist , index) in ucenterList" :key="index">
-			<uni-list-item v-for="(item,i) in sublist" :title="item.title" link :rightText="item.rightText" :key="i"
-				:clickable="true" :to="item.to" @click="ucenterListClick(item)" :show-extra-icon="true"
+			<uni-list-item class="Mylist" v-for="(item,i) in sublist" :title="item.title" link :note="item.rightText" :key="i":thumb="item.thumb"
+				:clickable="true" :to="item.to" @click="ucenterListClick(item)" :show-extra-icon="true" 
 				:extraIcon="{type:item.icon,color:'#999'}">
+				
 				<template v-slot:footer>
 					<view v-if="item.showBadge" class="item-footer">
 						<text class="item-footer-text">{{item.rightText}}</text>
@@ -12,6 +30,13 @@
 				</template>
 			</uni-list-item>
 		</uni-list>
+		
+		<uni-list-chat v-if="Interest1"title="运动" avatar="/static/通知.png" note="你感兴趣的运动的新帖子" time="刚刚" badge-positon="left" :badge-text="dot1" clickable="true" :border="false" @click="toMain(1)"></uni-list-chat>
+		<uni-list-chat v-if="Interest0"title="志愿活动" avatar="/static/通知.png" note="你感兴趣的志愿活动有新帖子" time="刚刚" badge-positon="left" :badge-text="dot0" clickable="true" border='false' @click="toMain(0)"></uni-list-chat>
+		<uni-list-chat v-if="Interest2"title="拍照" avatar="/static/通知.png" note="你感兴趣的拍照有新帖子" time="刚刚" badge-positon="left" :badge-text="dot2" clickable="true" border='false' @click="toMain(2)"></uni-list-chat>
+		<uni-list-chat v-if="Interest4"title="小动物" avatar="/static/通知.png" note="你感兴趣的小动物有新帖子" time="刚刚" badge-positon="left" :badge-text="dot4" clickable="true" border='false' @click="toMain(4)"></uni-list-chat>
+		<uni-list-chat v-if="Interest5"title="演出" avatar="/static/通知.png" note="你感兴趣的演出有新帖子" time="刚刚" badge-positon="left" :badge-text="dot5" clickable="true" border='false' @click="toMain(5)"></uni-list-chat>
+		<uni-list-chat v-if="Interest3"title="寻物" avatar="/static/通知.png" note="你感兴趣的寻物有新帖子" time="刚刚" badge-positon="left" :badge-text="dot3" clickable="true" border='false' @click="toMain(3)"></uni-list-chat>
 	</view>
 </template>
 
@@ -23,6 +48,13 @@
 	const uniShare = new UniShare()
 	// #endif
 	const db = uniCloud.database();
+	var InterestArray = new Array(); //返回的兴趣列表，是一个数组
+	var Interest0 = 0; //记录用户筛选的帖子
+	var Interest1 = 0;
+	var Interest2 = 0;
+	var Interest3 = 0;
+	var Interest4 = 0;
+	var Interest5 = 0;
 	import {
 		store,
 		mutations
@@ -40,51 +72,59 @@
 		// #endif
 		data() {
 			return {
+				
+				dot0:'dot',
+				dot1:'dot',
+				dot2:'dot',
+				dot3:'dot',
+				dot4:'dot',
+				dot5:'dot',
+				 Interest0 : 0, //记录用户筛选的帖子
+				 Interest1 : 0,
+				 Interest2 : 0,
+				 Interest3 : 0,
+				 Interest4 : 0,
+				 Interest5 : 0,
 				ucenterList: [
-					[
-						// #ifdef APP-PLUS
-						{
-							"title": this.$t('mine.signInByAd'),
-							"event": 'signInByAd',
-							"icon": "compose"
-						},
-						// #endif
-						
-						// #ifdef APP-PLUS
-						{
-							"title": this.$t('mine.toEvaluate'),
-							"event": 'gotoMarket',
-							"icon": "star"
-						}
-						//#endif
-						// #ifdef APP-PLUS
-						, {
-							"title": this.$t('mine.invite'),
-							"event": 'share',
-							"icon": "redo"
-						}
-						// #endif
-					],
-					[{
+					
+					[/* {
 						"title":"评论我的",
-						"to": '/pages/comments/comments',
-						"icon": "chat"
-					},
-						{
-						"title":"收到的赞",
-						"to": '/pages/likes/likes',
-						"icon": "heart"
-					},
-						{
-						"title":"地区聊天室",
+						"to": '/pages/CommentMe/CommentMe',
+						"thumb":"/static/评论.png",
+						"thumb-size":"lg",
+						"rightText":"评论不嫌多"
+					}, */
+					
+						/* {
+						"title":"地区聊天室1",
 						"to": '/pages/Chat/Chat',
-						"icon": "chatboxes"
+						"thumb":"/static/评论组,说话,讨论,留言.png",
+						"thumb-size":"lg",
+						"rightText":"西教"
 					},
 					{
+						"title":"地区聊天室2",
+						"to": '/pages/Chat-2/Chat-2',
+						
+						"thumb":"/static/评论组,说话,讨论,留言.png",
+						"thumb-size":"lg",
+						"rightText":"东园宿舍"
+					},
+					{
+						"title":"地区聊天室3",
+						"to": '/pages/Chat-3/Chat-3',
+						
+						"thumb":"/static/评论组,说话,讨论,留言.png",
+						"thumb-size":"lg",
+						"rightText":"东教"
+					}, */
+					/* {
 						"title":"帖子",
 						"to": '/pages/tiezi/list',
-						"icon": "chat"
-					}],
+						"thumb":"/static/帖子.png",
+						"thumb-size":"lg",
+						"rightText":"看看大家都在哪"
+					} */],
 					// #ifdef APP-PLUS
 					[{
 						"title": this.$t('mine.about'),
@@ -115,8 +155,50 @@
 				showBadge: this.appVersion.hasNew
 			})
 			//#endif
+			
 		},
 		onShow() {
+			uni.removeTabBarBadge({
+				 index: 1
+			})
+			var userNow=uniCloud.getCurrentUserInfo();
+			uniCloud.callFunction({
+				name: "InterestArray",
+				data: {},
+			
+			}).then(res => {
+				var Interest = res.result.data
+			
+				for (let i = 0; i < Interest.length; i++) {
+					if (Interest[i].user_id == userNow.uid)
+						InterestArray = Interest[i].Interest;
+				}
+				for (let i = 0; i < InterestArray.length; i++) {
+					if (InterestArray.indexOf(0) == -1)
+						this.Interest0 = 0;
+					if (InterestArray.indexOf(1) == -1)
+						this.Interest1 = 0;
+					if (InterestArray.indexOf(2) == -1)
+						this.Interest2 = 0;
+					if (InterestArray.indexOf(3) == -1)
+						this.Interest3 = 0;
+					if (InterestArray.indexOf(4) == -1)
+						this.Interest4 = 0;
+					if (InterestArray.indexOf(5) == -1)
+						this.Interest5 = 0;
+					if (InterestArray[i] == 0)
+						this.Interest0 = 1;
+					if (InterestArray[i] == 1)
+						this.Interest1 = 1;
+					if (InterestArray[i] == 2)
+						this.Interest2 = 1;
+					if (InterestArray[i] == 3)
+						this.Interest3 = 1;
+					if (InterestArray[i] == 4)
+						this.Interest4 = 1;
+					if (InterestArray[i] == 5)
+						this.Interest5 = 1;
+				}})
 		},
 		computed: {
 			userInfo() {
@@ -135,6 +217,57 @@
 			}
 		},
 		methods: {
+			toMain(num)
+			{
+				if(num==0)
+				this.dot0='';
+				else if(num==1)
+				this.dot1='';
+				else if(num==2)
+				this.dot2='';
+				else if(num==3)
+				this.dot3='';
+				else if(num==4)
+				this.dot4='';
+				else if(num==5)
+				this.dot5='';
+				uni.switchTab({
+					url:'/pages/list/list',
+					success: function (e) {
+												var page = getCurrentPages()[0]//相当于被跳转页面的选择器
+												if (page == undefined || page == null) {//判断页面是否存在
+													return;
+												} else{
+					                                console.log(page)//打印选择器中内容   
+													page.$vm.changeLocation(num)
+												}
+											}
+					
+				})
+			},
+			
+			tochat()
+			{
+				uni.navigateTo({
+					url:'/pages/Chat/Chat'
+				})
+			},
+			tocomment()
+			{
+				uni.navigateTo({
+					url:'/pages/tiezi/mycollection/mycollection'
+				})
+			},
+			totiezi()
+			{
+				uni.navigateTo({
+					url:'/pages/tiezi/list'
+				})
+			},
+			search(e)
+			{
+				console.log(e);
+			},
 			toSettings() {
 				uni.navigateTo({
 					url: "/pages/ucenter/settings/settings"
@@ -316,18 +449,105 @@
 		box-sizing: border-box;
 		flex-direction: column;
 	}
-
+	    .rounded {
+	        border-radius: 30px; /*设置边框半径*/
+	        width: 374px;
+	        height: 40px;
+	        background-color: #000000;
+	        color: white;
+	        text-align: center;
+	        line-height: 50px;
+	    }
 	page {
 		background-color: #f8f8f8;
 	}
 	/* #endif*/
+	.box {
+		position: relative;
+		right:3%;
+		top: 5%;
+		width: 450px;
+		height: 150px;
+		background: #ffffff;
 	
+		border-radius: 12px;
+		padding: 10px;
+		display: grid;
+		align-items: center;
+		justify-content: center;
+		color: #FFFFFF;
+		/* margin-bottom: 40px; */
+		.minibox1{
+			position: absolute;
+			left:12%;
+			width: 70px;
+			height: 70px;
+			background: #fee8eb;
+				
+			border-radius: 18px;
+			padding: 10px;
+			display: grid;
+			align-items: center;
+			justify-content: center;
+			color: #FFFFFF;
+			.star {
+				position: relative;
+				bottom:5%;
+			}
+		}
+		.minibox2{
+			position: absolute;
+			left:70%;
+			width: 70px;
+			height: 70px;
+			background: #e3f8ef;
+				
+			border-radius: 18px;
+			padding: 10px;
+			display: grid;
+			align-items: center;
+			justify-content: center;
+			color: #FFFFFF;
+			.chat {
+				position: relative;
+				bottom:5%;
+			}
+		}
+		.minibox3{
+			position: absolute;
+			left:41%;
+			width: 70px;
+			height: 70px;
+			background: #e4f0ff;
+				
+			border-radius: 18px;
+			padding: 10px;
+			display: grid;
+			align-items: center;
+			justify-content: center;
+			color: #FFFFFF;
+			.chatboxes {
+				position: relative;
+				bottom:5%;
+			}
+		}
+	
+		
+	
+		
+	}
 	.center {
 		flex: 1;
 		flex-direction: column;
 		background-color: #f8f8f8;
 	}
-
+	/* .Mylist{
+		width: 350px;
+		height: 50px;
+		border-radius: 20px;
+		overflow: hidden;
+		background-color: #007AFF;
+	} */
 	.userInfo {
 		// padding: 20rpx;
 		padding-top: 60px;
@@ -359,7 +579,7 @@
 	}
 
 	.center-list {
-		margin-bottom: 30rpx;
+		
 		background-color: #f9f9f9;
 	}
 

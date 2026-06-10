@@ -1,0 +1,7 @@
+{
+  "name": "tiezi",
+  "dependencies": {
+    "wx-common": "file:../common/wx-common"
+  },
+  "extensions": {}
+}

@@ -1,18 +1,15 @@
 <template>
 	<view class="uni-container">
-		<uni-forms ref="form" :value="formData" validate-trigger="submit" err-show-type="toast">
-			<uni-forms-item name="content" label="留言内容/回复内容" required>
+		<uni-forms ref="form" :value="formData" validate-trigger="submit" err-show-type="toast" label-position="top">
+			<uni-forms-item name="content" label="错误之处" required>
 				<textarea @input="binddata('content', $event.detail.value)" class="uni-textarea-border"
 					v-model="formData.content" trim="right"></textarea>
 			</uni-forms-item>
-			<uni-forms-item name="imgs" label="图片列表">
+			<uni-forms-item name="imgs" label="新图片">
 				<uni-file-picker file-mediatype="image" :limit="6" return-type="array" v-model="formData.imgs">
 				</uni-file-picker>
 			</uni-forms-item>
-			<uni-forms-item name="contact" label="联系人">
-				<uni-easyinput v-model="formData.contact" trim="both"></uni-easyinput>
-			</uni-forms-item>
-			<uni-forms-item name="mobile" label="联系电话">
+			<uni-forms-item name="mobile" label="联系方式">
 				<uni-easyinput v-model="formData.mobile" trim="both"></uni-easyinput>
 			</uni-forms-item>
 			<view class="uni-button-group">

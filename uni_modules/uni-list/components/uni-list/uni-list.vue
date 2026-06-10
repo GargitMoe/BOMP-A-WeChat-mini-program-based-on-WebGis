@@ -79,6 +79,7 @@
 		background-color: $uni-bg-color;
 		position: relative;
 		flex-direction: column;
+		border-radius: 20px;
 	}
 
 	.uni-list--border {
@@ -92,6 +93,7 @@
 		border-bottom-width: 0.5px;
 		/* #endif */
 		z-index: -1;
+		
 	}
 
 	/* #ifndef APP-NVUE */

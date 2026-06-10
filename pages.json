@@ -3,7 +3,7 @@
 			"path": "pages/list/list",
 			"style": {
 				// #ifndef APP-PLUS
-				"enablePullDownRefresh": true,
+				"enablePullDownRefresh": false,
 				// #endif
 				"navigationStyle": "custom"
 			}
@@ -15,30 +15,7 @@
 				"navigationStyle": "custom"
 				//#endif
 			}
-		}, {
-			"path": "pages/list/search/search",
-			"style": {
-				"navigationBarTitleText": "搜索"
-			}
-		}, {
-			"path": "pages/list/detail",
-			"style": {
-				"app-plus": {
-					"titleNView": {
-						"buttons": [{
-							"type": "share"
-						}],
-						"type": "transparent"
-					}
-				},
-				"h5": {
-					"titleNView": {
-						"type": "transparent"
-					}
-				},
-				"navigationBarTitleText": "文章详情"
-			}
-		},
+		},  
 		{
 			"path": "pages/ucenter/ucenter",
 			"style": {
@@ -107,38 +84,63 @@
 	,{
     "path": "pages/tiezi/add",
     "style": {
-        "navigationBarTitleText": "新增"
+        "navigationBarTitleText": "发布帖子",
+		"navigationBarTextStyle": "white"
     }
 }
 ,{
     "path": "pages/tiezi/edit",
     "style": {
-        "navigationBarTitleText": "编辑"
+        "navigationBarTitleText": "编辑帖子",
+		"navigationBarTextStyle": "white"
     }
 }
 ,{
     "path": "pages/tiezi/list",
     "style": {
-        "navigationBarTitleText": "列表"
+        "navigationBarTitleText": "大家的帖子",
+		"navigationBarTextStyle": "white"
     }
 }
 ,{
     "path": "pages/tiezi/detail",
     "style": {
-        "navigationBarTitleText": "详情"
+        "navigationBarTitleText": "详情",
+		"navigationBarBackgroundColor": "#439ffc",
+		"navigationBarTextStyle": "white",
+		"titleImage": "static/app-plus/sharemenu/copyurl.png"
     }
 }
     ,{
             "path" : "pages/Chat/Chat",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "",
+                "navigationBarTitleText": "西教聊天室",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,
+		{
+		    "path" : "pages/tiezi/mylist",
+		    "style" :                                                                                    
+		    {
+		        "navigationBarTitleText": "我发布的帖子列表",
+		        "enablePullDownRefresh": false
+		    }
+		    
+		}
+        ,{
+            "path" : "pages/tiezi/searchT/mydetailed/mydetailed",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "我发布的帖子",
                 "enablePullDownRefresh": false
             }
             
         }
         ,{
-            "path" : "pages/tiezi/searchT/searchT",
+            "path" : "pages/reply/reply",
             "style" :                                                                                    
             {
                 "navigationBarTitleText": "",
@@ -147,7 +149,25 @@
             
         }
         ,{
-            "path" : "pages/likes/likes",
+            "path" : "pages/Chat-2/Chat-2",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "东园宿舍聊天室",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/Chat-3/Chat-3",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "东教聊天室",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/tiezi/mycollection/mycollection",
             "style" :                                                                                    
             {
                 "navigationBarTitleText": "",
@@ -156,7 +176,79 @@
             
         }
         ,{
-            "path" : "pages/comments/comments",
+            "path" : "pages/tiezi/yanchuList/yanchuList",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/tiezi/sportList/sportList",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/tiezi/cameraList/cameraList",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/tiezi/volunteerList/volunteerList",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/tiezi/catList/catList",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/tiezi/lostList/lostList",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/UserDetail/UserDetail",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/MyInfo/MyInfo",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "用户信息",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/CommentMe/CommentMe",
             "style" :                                                                                    
             {
                 "navigationBarTitleText": "",
@@ -271,9 +363,10 @@
 		},
 		// #endif
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "uni-starter",
-		"navigationBarBackgroundColor": "#FFFFFF",
-		"backgroundColor": "#F8F8F8",
+		"navigationBarTitleText": "Bomp!",
+		"navigationBarBackgroundColor": "#467897",
+		"navigationBarTextStyle": "white",
+		"backgroundColor": "#ffffff",
 		"enablePullDownRefresh": false,
 		// "maxWidth":375,
 		"rpxCalcMaxDeviceWidth": 375,
@@ -294,9 +387,9 @@
 	},
 	"tabBar": {
 		"color": "#7A7E83",
-		"selectedColor": "#007AFF",
+		"selectedColor": "#467897",
 		"borderStyle": "black",
-		"backgroundColor": "#FFFFFF",
+		"backgroundColor": "#ffffff",
 		"list": [{
 			"pagePath": "pages/list/list",
 			"iconPath": "static/tabbar/list.png",

@@ -10,9 +10,9 @@
 			<uni-list-item class="item" @click="bindMobile" title="手机号" :rightText="userInfo.mobile||'未绑定'" link>
 			</uni-list-item>
 			<uni-list-item class="item" @click="setSchool('')"  title="学院" :rightText="userInfo.School||'未设置'" link>
-			</uni-list-item>
-			<uni-list-item class="item" @click="getLocation()"  title="获取位置" link>
-			</uni-list-item>
+				</uni-list-item>
+				<uni-list-item class="item" @click="setInterest('')"  title="兴趣" :rightText="userInfo.Interest||'未设置'" link>
+					</uni-list-item>
 			<uni-list-item v-if="userInfo.email" class="item" title="电子邮箱" :rightText="userInfo.email">
 			</uni-list-item>
 			<!-- #ifdef APP -->
@@ -38,6 +38,16 @@
 				title="设置学院" placeholder="请输入要设置的学院">
 			</uni-popup-dialog>
 		</uni-popup>
+		<uni-popup ref="dialog12" type="dialog">
+			<uni-popup-dialog mode="input" :value="userInfo.Interest" @confirm="setInterest" :inputType="setInterestIng?'Interest':'text'"
+				title="设置兴趣(以便于根据您的兴趣推送)" placeholder="请输入兴趣(志愿活动,运动,摄影)">
+			</uni-popup-dialog>
+		</uni-popup>
+		<!-- <uni-popup ref="dialog12" type="dialog">
+		<uni-forms-item name="tag" label="">
+		  <uni-data-checkbox v-model="userInfo.Interest" :localdata="formOptions.tag_localdata"></uni-data-checkbox>
+		</uni-forms-item>
+		</uni-popup> -->
 		<uni-id-pages-bind-mobile ref="bind-mobile-by-sms" @success="bindMobileSuccess"></uni-id-pages-bind-mobile>
 		<template v-if="showLoginManage">
 			<button v-if="userInfo._id" @click="logout">退出登录</button>
@@ -81,7 +91,23 @@ const uniIdCo = uniCloud.importObject("uni-id-co")
 				hasPwd: false,
 				showLoginManage: false ,//通过页面传参隐藏登录&退出登录按钮
 				setNicknameIng:false,
-				setSchoolIng:false
+				setSchoolIng:false,
+				formOptions: {
+				  "tag_localdata": [
+				    {
+				      "text": "志愿活动",
+				      "value": 0
+				    },
+				    {
+				      "text": "运动",
+				      "value": 1
+				    },
+				    {
+				      "text": "随手拍",
+				      "value": 2
+				    }
+				  ]
+				},
 			}
 		},
 		async onShow() {
@@ -200,6 +226,22 @@ const uniIdCo = uniCloud.importObject("uni-id-co")
 					this.$refs.dialog1.close()
 				} else {
 					this.$refs.dialog1.open()
+				}
+			},
+			setInterest(Interest) {
+				/* if(Interest!="志愿活动"||Interest=="运动"||Interest=="摄影"||Interest=="")return uni.showToast({
+					icon:"none",
+					mask:true,
+					title:"仅可以输入备选的兴趣"
+				}) */
+				if (Interest) {
+					mutations.updateUserInfo({
+						Interest
+					})
+					this.setInterestIng = false
+					this.$refs.dialog12.close()
+				} else {
+					this.$refs.dialog12.open()
 				}
 			},
 			deactivate(){

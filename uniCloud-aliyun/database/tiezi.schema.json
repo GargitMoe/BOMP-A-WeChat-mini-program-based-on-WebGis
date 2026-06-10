@@ -49,7 +49,19 @@
 			        {
 			          "text": "随手拍",
 			          "value": 2
-			        }
+			        },
+					{
+					  "text": "寻物启事",
+					  "value": 3
+					},
+					{
+					  "text": "小动物们",
+					  "value": 4
+					},
+					{
+					  "text": "户外演出",
+					  "value": 5
+					}
 			      ]
 		},
 		"mobile":
@@ -66,9 +78,29 @@
 		"like_count": {
 			"bsonType": "int",
 			"description": "点赞数量",
-			"permission": {
-				"write": false
-			}
+			"defaultValue":0
+			
+		},
+		"collection_count": {
+			"bsonType": "int",
+			"description": "收藏数量",
+			"defaultValue":0
+			
+		},
+		
+		"view_count": {
+			"bsonType": "int",
+			"description": "阅读量",
+			"defaultValue":0
+			
+		},
+		"latitude":{
+			"bsonType": "double",
+			"description": "经度"
+		},
+		"longtitude":{
+			"bsonType": "double",
+			"description": "纬度"
 		}
 	}
 }

@@ -1,0 +1,140 @@
+<template>
+	<view class="container">
+		<unicloud-db ref="udb" where="'tag==5'" v-slot:default="{data, pagination, loading, hasMore, error}"
+			:collection="collectionList"
+			field="title,article,image,tag,mobile,latitude,longtitude,like_count,view_count,collection_count">
+			<view v-if="error">{{error.message}}</view>
+			<view v-else-if="data">
+				<uni-list>
+					<uni-list-item direction="column" :note="item.article" v-for="(item, index) in data" :key="index"
+						showArrow :clickable="true" @click="handleItemClick(item._id)">
+						<!-- <template v-slot:header>
+							<view class="uni-thumb">
+								<image :src="item.image.url" mode="aspectFill"></image>
+							</view>
+						</template> -->
+						<!-- <template v-slot:header>
+							<view class="uni-title">{{item.title}}</view>
+						</template>
+						<template v-slot:body>
+							<view class="uni-list-box">
+								<view class="uni-thumb">
+									<image :src="item.image.url" mode="aspectFill"></image>
+								</view>
+								<view class="uni-content">
+									<view class="uni-title-sub uni-ellipsis-2">{{item.article}}</view>
+									<view class="uni-note">Dcloud 128评论 21 赞</view>
+								</view>
+							</view>
+						</template> -->
+						<template v-slot:header>
+							<view class="uni-title">{{item.title}}</view>
+							<view class="uni-thumb uni-content list-picture">
+								<image style="width: 150px; height: 150px;" :src="item.image.url" mode="aspectFill">
+								</image>
+							</view>
+						</template>
+						<template v-slot:footer>
+							<view class="uni-footer">
+								<text class="uni-footer-text" style="color: #797979;
+			font-size:10px;">有{{item.view_count}}人看过——</text>
+								<text class="uni-footer-text" style="color: #797979;
+			font-size:10px;">有{{item.like_count}}人点赞了——</text>
+								<text class="uni-footer-text" style="color: #797979;
+			font-size:10px;">有{{item.collection_count}}人收藏了</text>
+							</view>
+						</template>
+					</uni-list-item>
+				</uni-list>
+			</view>
+			<uni-load-more :status="loading?'loading':(hasMore ? 'more' : 'noMore')"></uni-load-more>
+		</unicloud-db>
+		<uni-fab ref="fab" horizontal="right" vertical="bottom" :pop-menu="false" @fabClick="fabClick" />
+	</view>
+</template>
+
+<script>
+	const db = uniCloud.database()
+	export default {
+		data() {
+			return {
+				collectionList: "tiezi",
+				loadMore: {
+					contentdown: '',
+					contentrefresh: '',
+					contentnomore: ''
+				}
+			}
+		},
+		onPullDownRefresh() {
+			this.$refs.udb.loadData({
+				clear: true
+			}, () => {
+				uni.stopPullDownRefresh()
+			})
+		},
+		onReachBottom() {
+			this.$refs.udb.loadMore()
+		},
+		methods: {
+			handleItemClick(id) {
+				uni.navigateTo({
+					url: '../detail?id=' + id
+				})
+			},
+			fabClick() {
+				// 打开新增页面
+				uni.navigateTo({
+					url: './add',
+					events: {
+						// 监听新增数据成功后, 刷新当前页面数据
+						refreshData: () => {
+							this.$refs.udb.loadData({
+								clear: true
+							})
+						}
+					}
+				})
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+	.uni-title {
+		font-weight: 600;
+		font-size: 20px;
+	}
+
+	.comment-item {
+		display: flex;
+
+		.wrap {
+			flex: 1;
+			padding-left: 20rpx;
+			padding-bottom: 20rpx;
+
+			.username {
+				font-size: 26rpx;
+				color: #666;
+				padding: 10rpx 0;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+
+				.iconfont {
+					font-size: 20rpx;
+					padding: 10rpx;
+					color: #999;
+				}
+			}
+
+			.comment-content {
+				font-size: 34rpx;
+				color: #111;
+				line-height: 1.8em;
+			}
+
+		}
+	}
+</style>

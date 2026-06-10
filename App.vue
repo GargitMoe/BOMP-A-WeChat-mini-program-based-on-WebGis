@@ -1,6 +1,7 @@
 <script>
 	import initApp from '@/common/appInit.js';
 	import openApp from '@/common/openApp.js';
+	
 	// #ifdef H5
 		openApp() //创建在h5端全局悬浮引导用户下载app的功能
 	// #endif
@@ -51,6 +52,8 @@
 	}
 </script>
 
-<style>
-	/*每个页面公共css */
+<style lang="scss">
+@import "@/uni_modules/uview-ui/index.scss";
+/* @import "@/static/fonts/iconfont.css"; */
+
 </style>

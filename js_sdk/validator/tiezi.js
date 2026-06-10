@@ -41,7 +41,19 @@ const validator = {
           {
             "text": "随手拍",
             "value": 2
-          }
+          },
+		  {
+		    "text": "寻物启事",
+		    "value": 3
+		  },
+		  {
+		    "text": "小动物们",
+		    "value": 4
+		  },
+		  {
+		    "text": "户外演出",
+		    "value": 5
+		  }
         ]
       }
     ],
@@ -54,10 +66,17 @@ const validator = {
       }
     ]
   },
-  "user_id": {
+  "latitude": {
     "rules": [
       {
-        "format": "string"
+        "format": "double"
+      }
+    ]
+  },
+  "longtitude": {
+    "rules": [
+      {
+        "format": "double"
       }
     ]
   }
@@ -67,7 +86,10 @@ const enumConverter = {
   "tag_valuetotext": {
     "0": "志愿活动",
     "1": "运动",
-    "2": "随手拍"
+    "2": "随手拍",
+	"3":"寻物启事",
+	"4":"小动物",
+	"5":"户外演出",
   }
 }
 

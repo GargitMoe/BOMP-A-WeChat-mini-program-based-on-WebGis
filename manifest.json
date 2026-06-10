@@ -1,5 +1,5 @@
 {
-    "name" : "帖子",
+    "name" : "BOMP",
     "appid" : "__UNI__9AF7EB6",
     "description" : "云端一体应用快速开发基本项目模版",
     "versionName" : "1.0.0",
@@ -86,7 +86,7 @@
         "optimization" : {
             "subPackages" : true
         },
-        "requiredPrivateInfos" : [ "getLocation" ],
+        "requiredPrivateInfos" : [ "chooseLocation", "getLocation" ],
         "permission" : {
             "scope.userLocation" : {
                 "desc" : "需要得知位置权限"

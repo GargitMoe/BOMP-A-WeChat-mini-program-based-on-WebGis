@@ -12,7 +12,7 @@
 		</view>
 		<template v-else>
 			<!-- #ifdef APP-NVUE -->
-			<text class="state-text">{{state.loading?'加载中...':(state.hasMore?'上拉加载更多':'没有更多数据了')}}</text>
+			<text class="state-text">{{state.loading?'加载中...':(state.hasMore?'上拉加载更多':'你还没有收藏过帖子')}}</text>
 			<!-- #endif -->
 			<!-- #ifndef APP-NVUE -->
 			<uni-load-more class="uni-load-more" :status="state.loading?'loading':(state.hasMore?'hasMore':'noMore')"></uni-load-more>
@@ -122,6 +122,8 @@
 		justify-content: center;
 	}
 	.uni-load-more{
+		position: absolute;
+		top:50%;
 		align-items: center;
 		justify-content: center;
 	}
