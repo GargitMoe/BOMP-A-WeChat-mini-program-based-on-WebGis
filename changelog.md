@@ -1,3 +1,26 @@
+# BOMP! 项目变更日志
+
+> 项目基于 uni-starter 2.x 模板开发，以下头部为项目中增加/修改的内容。
+> 底部 [uni-starter 原始 changelog](#uni-starter-原始-changelog) 保留以供参考。
+
+## 2024 项目自定义变更
+
+- 新增 地图首页（`list.nvue`）气泡帖子展示，基于腾讯地图
+- 新增 帖子发布/编辑/详情系统 (`pages/tiezi/`)，含 7 种分类
+- 新增 社群分类浏览页 (`grid.vue`)
+- 新增 私聊模块 (Chat/Chat-2/Chat-3)
+- 新增 评论/回复系统、收藏、点赞、浏览计数
+- 新增 用户主页、个人中心
+- 新增 云数据库 Schema：tiezi, Article, article_comment 等
+- 新增 地图 marker 动态加载（区域变化事件）
+- 引入 uView UI 组件库
+
+---
+
+# uni-starter 原始 changelog
+
+以下为 uni-starter 模板自身版本更新日志，与本项目自定义功能无关。
+
 ## 2.1.4（2023-07-11）
 - 纠正`opendb-news-articles.schema.json`错误的权限表达式`doc.uid`为`doc.user_id`
 ## 2.1.3（2023-05-10）
